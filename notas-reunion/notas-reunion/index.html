@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14897a">
+<title>Notas de Reunión</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<script src="jspdf.umd.min.js" defer></script>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1f2933; --muted:#5f6b76; --line:#e2ded5;
+  --pri:#14897a; --pri-soft:#e2f3f0; --rec:#c8432b; --ok:#2e7d4f; --warn:#b7791f;
+  --r:14px; --fs:17px;
+}
+body.grande{--fs:20px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.1em;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;padding:8px 12px;min-height:44px;cursor:pointer}
+main{max-width:860px;margin:0 auto;padding:14px 14px 120px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px;min-height:46px;cursor:pointer}
+.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fila>*{flex:1 1 160px}
+label{display:block;font-weight:600;font-size:.88em;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fffdf9;min-height:46px}
+textarea{min-height:110px;resize:vertical}
+textarea.alto{min-height:200px}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--pri-soft);border-color:var(--pri)}
+.btn{border:0;border-radius:12px;padding:10px 16px;min-height:48px;cursor:pointer;background:var(--pri-soft);color:var(--pri);font-weight:600}
+.btn.pri{background:var(--pri);color:#fff}
+.btn.rec{background:var(--rec);color:#fff}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.peligro{background:#fbeae6;color:var(--rec)}
+.btn.mini{min-height:38px;padding:6px 10px;font-size:.9em}
+.secc{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.secc h2{font-size:1em;margin:0}
+.dictar{border:1px solid var(--line);background:#fff;border-radius:10px;min-height:38px;padding:4px 10px;cursor:pointer;font-size:.85em}
+.dictar.on{background:var(--rec);color:#fff;border-color:var(--rec)}
+.reunion{display:block;width:100%;text-align:left;cursor:pointer}
+.reunion h3{margin:0 0 4px;font-size:1.02em}
+.meta{color:var(--muted);font-size:.86em}
+.chip{display:inline-block;background:var(--pri-soft);color:var(--pri);border-radius:999px;padding:2px 10px;font-size:.8em;font-weight:600;margin-right:4px}
+.chip.t{background:#fdf1e3;color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{background:var(--pri-soft);color:var(--pri);border-radius:999px;padding:4px 6px 4px 12px;display:flex;align-items:center;gap:4px}
+.chips span button{border:0;background:transparent;color:var(--pri);cursor:pointer;font-size:1.1em;min-width:28px;min-height:28px}
+.tarea{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+.tarea:last-child{border-bottom:0}
+.tarea input[type=checkbox]{width:26px;height:26px;min-height:0;flex:none;margin-top:3px}
+.tarea .txt{flex:1}
+.tarea.hecha .txt{text-decoration:line-through;color:var(--muted)}
+.grabador{border:2px solid var(--line)}
+.grabador.on{border-color:var(--rec);background:#fff7f5}
+.reloj{font-variant-numeric:tabular-nums;font-size:1.6em;font-weight:700}
+.punto{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--rec);margin-right:6px;animation:lat 1s infinite}
+@keyframes lat{50%{opacity:.2}}
+.audio{padding:8px 0;border-bottom:1px dashed var(--line)}
+.audio:last-child{border-bottom:0}
+audio{width:100%;margin:6px 0}
+.vacio{text-align:center;color:var(--muted);padding:30px 10px}
+.guardado{font-size:.8em;opacity:.9}
+.aviso{background:#fdf6e3;border:1px solid #eedc9a;border-radius:12px;padding:10px 12px;font-size:.9em}
+.fab{position:fixed;right:18px;bottom:22px;z-index:6;border-radius:999px;padding:14px 22px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center}
+.barra .btn{flex:1;max-width:260px}
+.modal{position:fixed;inset:0;background:rgba(20,25,30,.45);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.hoja{background:var(--card);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+@media(min-width:700px){.modal{align-items:center}.hoja{border-radius:18px}}
+.hoja h2{margin:0 0 6px;font-size:1.1em}
+.opc{display:grid;gap:8px;margin-top:10px}
+.opc .btn{text-align:left;display:flex;gap:10px;align-items:center}
+.opc small{display:block;font-weight:400;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1f2933;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <button id="bAtras" class="oculto" aria-label="Volver">←</button>
+  <h1 id="tit">Notas de Reunión</h1>
+  <span id="estado" class="guardado"></span>
+  <button id="bAjustes" aria-label="Ajustes">⚙️</button>
+</header>
+
+<main>
+  <!-- LISTA -->
+  <section id="vLista">
+    <div class="tabs">
+      <button data-tab="reuniones" class="on">🗂️ Reuniones</button>
+      <button data-tab="tareas">✅ Tareas pendientes</button>
+    </div>
+    <div id="pReuniones">
+      <div class="fila" style="margin-bottom:10px">
+        <input id="buscar" type="search" placeholder="🔎 Buscar (título, asistentes, notas…)">
+        <select id="filtroTipo" style="flex:0 1 220px"></select>
+      </div>
+      <div id="lista"></div>
+    </div>
+    <div id="pTareas" class="oculto"><div id="listaTareas"></div></div>
+    <button class="btn pri fab" id="bNueva">＋ Nueva reunión</button>
+  </section>
+
+  <!-- EDITOR -->
+  <section id="vEditor" class="oculto">
+    <div class="card">
+      <label for="fTitulo">Título</label>
+      <input id="fTitulo" placeholder="Ej.: CCP de noviembre">
+      <div class="fila">
+        <div><label for="fTipo">Tipo de reunión</label><select id="fTipo"></select></div>
+        <div><label for="fFecha">Fecha y hora</label><input id="fFecha" type="datetime-local"></div>
+      </div>
+      <label for="fLugar">Lugar o enlace</label>
+      <input id="fLugar" placeholder="Sala de profesorado / enlace de Teams…">
+      <label for="fAsis">Asistentes <span style="font-weight:400">(escribe y pulsa Intro)</span></label>
+      <input id="fAsis" placeholder="Nombre o cargo">
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <!-- Grabación -->
+    <div class="card grabador" id="grab">
+      <div class="secc"><h2>🎙️ Grabación de audio</h2><span class="reloj" id="reloj">00:00</span></div>
+      <div class="aviso" style="margin-top:10px">
+        <label style="display:flex;gap:10px;align-items:center;margin:0;color:var(--ink);font-weight:400">
+          <input type="checkbox" id="fAviso" style="width:24px;height:24px;min-height:0;flex:none">
+          He informado a las personas asistentes de que se graba la reunión.
+        </label>
+      </div>
+      <div class="fila" style="margin-top:10px">
+        <button class="btn rec" id="bGrabar">● Grabar</button>
+        <button class="btn oculto" id="bPausa">⏸ Pausa</button>
+        <button class="btn oculto" id="bMarca">📌 Marca de tiempo</button>
+        <button class="btn ghost oculto" id="bParar">■ Terminar</button>
+      </div>
+      <div class="fila" style="margin-top:8px">
+        <label class="btn ghost" style="text-align:center;margin:0;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer">
+          📁 Añadir audio existente (Teams, grabadora…)
+          <input type="file" id="fImportAudio" accept="audio/*,video/*" class="oculto">
+        </label>
+      </div>
+      <div id="audios" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="secc"><h2>📋 Orden del día</h2><button class="dictar" data-dictar="fOrden">🎤 Dictar</button></div>
+      <textarea id="fOrden" placeholder="1. …"></textarea>
+    </div>
+    <div class="card">
+      <div class="secc"><h2>📝 Notas</h2><button class="dictar" data-dictar="fNotas">🎤 Dictar</button></div>
+      <textarea id="fNotas" class="alto" placeholder="Lo que se va hablando… (las marcas de tiempo del audio aparecen aquí)"></textarea>
+    </div>
+    <div class="card">
+      <div class="secc"><h2>🤝 Acuerdos</h2><button class="dictar" data-dictar="fAcuerdos">🎤 Dictar</button></div>
+      <textarea id="fAcuerdos" placeholder="Un acuerdo por línea"></textarea>
+    </div>
+    <div class="card">
+      <div class="secc"><h2>✅ Tareas y seguimiento</h2></div>
+      <div id="tareas"></div>
+      <div class="fila" style="margin-top:8px">
+        <input id="tTexto" placeholder="Qué hay que hacer" style="flex:2 1 220px">
+        <input id="tResp" placeholder="Quién" style="flex:1 1 120px">
+        <input id="tFecha" type="date" style="flex:1 1 140px">
+        <button class="btn" id="bAddTarea" style="flex:0 0 auto">＋ Añadir</button>
+      </div>
+    </div>
+    <button class="btn peligro" id="bBorrar" style="width:100%">🗑️ Eliminar esta reunión</button>
+  </section>
+</main>
+
+<div class="barra oculto" id="barra">
+  <button class="btn pri" id="bCompartir">📤 Compartir / Exportar</button>
+</div>
+
+<!-- Hoja compartir -->
+<div class="modal" id="mCompartir"><div class="hoja">
+  <h2>📤 Compartir o exportar</h2>
+  <div class="meta">En el móvil se abre el menú para elegir WhatsApp, Notion, Drive, correo… En el ordenador se descarga el archivo.</div>
+  <div class="opc">
+    <button class="btn" data-acc="pdf">📄 Acta en PDF<small>Para enviar, archivar o imprimir</small></button>
+    <button class="btn" data-acc="wa">💬 Resumen para WhatsApp<small>Texto corto con acuerdos y tareas</small></button>
+    <button class="btn" data-acc="notion">🧩 Copiar para Notion<small>Se pega en Notion con títulos y casillas</small></button>
+    <button class="btn" data-acc="md">⬇️ Archivo Markdown (.md)<small>Para importar en Notion, Obsidian…</small></button>
+    <button class="btn" data-acc="todo">📦 PDF + todos los audios<small>Envía todo a la vez (si el móvil lo permite)</small></button>
+    <button class="btn ghost" data-cerrar>Cerrar</button>
+  </div>
+</div></div>
+
+<!-- Ajustes -->
+<div class="modal" id="mAjustes"><div class="hoja">
+  <h2>⚙️ Ajustes</h2>
+  <label for="aNombre">Tu nombre (aparece como «Levanta acta»)</label>
+  <input id="aNombre">
+  <label for="aCentro">Centro</label>
+  <input id="aCentro">
+  <label style="display:flex;gap:10px;align-items:center;color:var(--ink);font-weight:400;margin-top:14px">
+    <input type="checkbox" id="aGrande" style="width:24px;height:24px;min-height:0;flex:none"> Letra grande
+  </label>
+  <div class="opc">
+    <button class="btn" id="bBackup">💾 Copia de seguridad (todo, con audios)<small>Guárdala en Drive para pasar los datos del móvil al ordenador</small></button>
+    <label class="btn" style="margin:0;color:var(--pri);cursor:pointer">📥 Restaurar copia de seguridad<small>Se suman a las reuniones que ya tienes</small>
+      <input type="file" id="fRestaurar" accept=".json,application/json" class="oculto"></label>
+    <button class="btn ghost" data-cerrar>Cerrar</button>
+  </div>
+  <p class="meta" id="infoAlmac"></p>
+</div></div>
+
+<!-- Confirmar -->
+<div class="modal" id="mConfirmar"><div class="hoja">
+  <h2 id="cTit">¿Seguro?</h2><p id="cTxt" class="meta"></p>
+  <div class="fila"><button class="btn ghost" id="cNo">Cancelar</button><button class="btn peligro" id="cSi">Sí, eliminar</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ---------- Datos fijos ---------- */
+const TIPOS = {
+  claustro:{n:'Claustro',orden:'1. Lectura y aprobación, si procede, del acta de la sesión anterior.\n2. \n3. Ruegos y preguntas.'},
+  ccp:{n:'CCP',orden:'1. Lectura y aprobación, si procede, del acta de la sesión anterior.\n2. \n3. Ruegos y preguntas.'},
+  eoa:{n:'Equipo de Orientación y Apoyo',orden:'1. Seguimiento de casos.\n2. Coordinación PT / AL / PSC / ATE.\n3. Varios.'},
+  docente:{n:'Equipo docente / Evaluación',orden:'1. Valoración general del grupo.\n2. Alumnado con dificultades / medidas de inclusión.\n3. Acuerdos.'},
+  familias:{n:'Entrevista con familia',orden:'1. Motivo de la reunión.\n2. Información aportada por la familia.\n3. Información del centro.\n4. Compromisos.'},
+  externos:{n:'Servicios externos',orden:'1. Presentación del caso.\n2. Actuaciones de cada servicio.\n3. Coordinación y próximos pasos.'},
+  teams:{n:'Teams / online',orden:''},
+  formacion:{n:'Formación / Inspección',orden:''},
+  otra:{n:'Otra',orden:''}
+};
+
+/* ---------- Utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const mmss = s => { s = Math.round(s); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h ? h + ':' : '') + String(m).padStart(2,'0') + ':' + String(x).padStart(2,'0'); };
+function ahoraLocal(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
+function fechaBonita(v){ if(!v) return 'Sin fecha'; const d = new Date(v);
+  return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) + ' · ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); }
+function fechaCorta(v){ if(!v) return ''; return new Date(v + (v.length===10?'T12:00':'')).toLocaleDateString('es-ES',{day:'numeric',month:'short'}); }
+function nombreArchivo(r, ext){ const base = ((r.fecha||'').slice(0,10) + ' ' + (r.titulo||'reunion')).trim()
+  .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').slice(0,60); return (base||'reunion') + '.' + ext; }
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(()=>el.classList.remove('on'), 2600); }
+function abrir(id){ $(id).classList.add('on'); }
+function cerrar(id){ $(id).classList.remove('on'); }
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.hasAttribute('data-cerrar')) m.classList.remove('on'); }));
+function confirmar(tit, txt){ return new Promise(res => { $('#cTit').textContent = tit; $('#cTxt').textContent = txt; abrir('#mConfirmar');
+  $('#cSi').onclick = () => { cerrar('#mConfirmar'); res(true); }; $('#cNo').onclick = () => { cerrar('#mConfirmar'); res(false); }; }); }
+
+/* ---------- Ajustes ---------- */
+let AJ = { nombre:'', centro:'', grande:false };
+try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem('nr_ajustes') || '{}')); } catch(e){}
+function guardarAjustes(){ try { localStorage.setItem('nr_ajustes', JSON.stringify(AJ)); } catch(e){} document.body.classList.toggle('grande', !!AJ.grande); }
+guardarAjustes();
+
+/* ---------- Base de datos (IndexedDB, en el propio dispositivo) ---------- */
+let DB;
+function abrirDB(){ return new Promise((res, rej) => { const q = indexedDB.open('notas-reunion', 1);
+  q.onupgradeneeded = () => { const d = q.result; d.createObjectStore('reuniones', {keyPath:'id'}); d.createObjectStore('audios', {keyPath:'id'}); };
+  q.onsuccess = () => { DB = q.result; res(); }; q.onerror = () => rej(q.error); }); }
+function tx(store, modo, fn){ return new Promise((res, rej) => { const t = DB.transaction(store, modo); const s = t.objectStore(store);
+  const r = fn(s); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); }
+const dbTodas = () => tx('reuniones','readonly', s => s.getAll());
+const dbGuardar = r => tx('reuniones','readwrite', s => s.put(r));
+const dbBorrar = id => tx('reuniones','readwrite', s => s.delete(id));
+const dbAudio = id => tx('audios','readonly', s => s.get(id));
+const dbGuardarAudio = a => tx('audios','readwrite', s => s.put(a));
+const dbBorrarAudio = id => tx('audios','readwrite', s => s.delete(id));
+
+/* ---------- Estado ---------- */
+let REUNIONES = [], ACTUAL = null, tabActual = 'reuniones';
+
+function nuevaReunion(){ return { id:uid(), titulo:'', tipo:'claustro', fecha:ahoraLocal(), lugar:'', asistentes:[],
+  orden:TIPOS.claustro.orden, notas:'', acuerdos:'', tareas:[], audios:[], aviso:false, creado:Date.now(), actualizado:Date.now() }; }
+
+/* ---------- Vista lista ---------- */
+function pintarFiltro(){ const f = $('#filtroTipo'); f.innerHTML = '<option value="">Todos los tipos</option>' +
+  Object.entries(TIPOS).map(([k,v]) => `<option value="${k}">${esc(v.n)}</option>`).join('');
+  $('#fTipo').innerHTML = Object.entries(TIPOS).map(([k,v]) => `<option value="${k}">${esc(v.n)}</option>`).join(''); }
+
+function pintarLista(){
+  const q = $('#buscar').value.trim().toLowerCase(), t = $('#filtroTipo').value;
+  const lista = REUNIONES.filter(r => (!t || r.tipo === t) && (!q || [r.titulo, r.lugar, r.notas, r.acuerdos, r.orden, ...(r.asistentes||[])].join(' ').toLowerCase().includes(q)))
+    .sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+  $('#lista').innerHTML = lista.length ? lista.map(r => {
+    const pend = (r.tareas||[]).filter(x => !x.hecha).length;
+    return `<button class="card reunion" data-id="${r.id}">
+      <h3>${esc(r.titulo || 'Reunión sin título')}</h3>
+      <div class="meta">${esc(fechaBonita(r.fecha))}${r.lugar ? ' · ' + esc(r.lugar) : ''}</div>
+      <div style="margin-top:6px"><span class="chip">${esc(TIPOS[r.tipo]?.n || 'Otra')}</span>
+      ${(r.audios||[]).length ? `<span class="chip">🎙️ ${r.audios.length}</span>` : ''}
+      ${pend ? `<span class="chip t">⏳ ${pend} tarea${pend>1?'s':''}</span>` : ''}</div></button>`; }).join('')
+    : `<div class="vacio">${REUNIONES.length ? 'No hay reuniones con ese filtro.' : 'Todavía no hay reuniones.<br>Pulsa <b>＋ Nueva reunión</b> para empezar.'}</div>`;
+}
+
+function pintarTareasGlobal(){
+  const items = [];
+  REUNIONES.forEach(r => (r.tareas||[]).forEach(t => { if (!t.hecha) items.push({r, t}); }));
+  items.sort((a,b) => (a.t.fecha || '9999').localeCompare(b.t.fecha || '9999'));
+  const hoy = new Date().toISOString().slice(0,10);
+  $('#listaTareas').innerHTML = items.length ? '<div class="card">' + items.map(({r,t}) => `
+    <div class="tarea"><input type="checkbox" data-rid="${r.id}" data-tid="${t.id}" aria-label="Hecha">
+      <div class="txt">${esc(t.texto)}<div class="meta">${t.resp ? '👤 ' + esc(t.resp) + ' · ' : ''}${t.fecha ? (t.fecha < hoy ? '⚠️ ' : '📅 ') + esc(fechaCorta(t.fecha)) + ' · ' : ''}
+      <a href="#" data-abrir="${r.id}">${esc(r.titulo || 'Reunión')}</a></div></div></div>`).join('') + '</div>'
+    : '<div class="vacio">🎉 No tienes tareas pendientes.</div>';
+}
+
+$('#lista').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) abrirReunion(b.dataset.id); });
+$('#listaTareas').addEventListener('click', e => { const a = e.target.closest('[data-abrir]'); if (a){ e.preventDefault(); abrirReunion(a.dataset.abrir); } });
+$('#listaTareas').addEventListener('change', async e => { const c = e.target; if (!c.dataset.rid) return;
+  const r = REUNIONES.find(x => x.id === c.dataset.rid); const t = r && r.tareas.find(x => x.id === c.dataset.tid);
+  if (t){ t.hecha = true; r.actualizado = Date.now(); await dbGuardar(r); toast('Tarea completada ✓'); setTimeout(pintarTareasGlobal, 400); } });
+$('#buscar').addEventListener('input', pintarLista);
+$('#filtroTipo').addEventListener('change', pintarLista);
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  tabActual = b.dataset.tab; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $('#pReuniones').classList.toggle('oculto', tabActual !== 'reuniones'); $('#pTareas').classList.toggle('oculto', tabActual !== 'tareas');
+  if (tabActual === 'tareas') pintarTareasGlobal(); }));
+
+/* ---------- Navegación ---------- */
+function irLista(){ pararDictado(); ACTUAL = null; $('#vEditor').classList.add('oculto'); $('#barra').classList.add('oculto'); $('#vLista').classList.remove('oculto');
+  $('#bAtras').classList.add('oculto'); $('#tit').textContent = 'Notas de Reunión'; $('#estado').textContent = '';
+  if (location.hash) history.replaceState(null, '', location.pathname); pintarLista(); if (tabActual === 'tareas') pintarTareasGlobal(); window.scrollTo(0,0); }
+async function abrirReunion(id){
+  ACTUAL = REUNIONES.find(r => r.id === id); if (!ACTUAL) return;
+  $('#vLista').classList.add('oculto'); $('#vEditor').classList.remove('oculto'); $('#barra').classList.remove('oculto'); $('#bAtras').classList.remove('oculto');
+  $('#tit').textContent = ACTUAL.titulo || 'Nueva reunión';
+  $('#fTitulo').value = ACTUAL.titulo; $('#fTipo').value = ACTUAL.tipo; $('#fFecha').value = ACTUAL.fecha; $('#fLugar').value = ACTUAL.lugar;
+  $('#fOrden').value = ACTUAL.orden; $('#fNotas').value = ACTUAL.notas; $('#fAcuerdos').value = ACTUAL.acuerdos; $('#fAviso').checked = !!ACTUAL.aviso;
+  pintarChips(); pintarTareas(); pintarAudios(); window.scrollTo(0,0);
+}
+$('#bAtras').onclick = () => { if (grabando()) { toast('Termina la grabación antes de salir'); return; } irLista(); };
+$('#bNueva').onclick = async () => { const r = nuevaReunion(); REUNIONES.push(r); await dbGuardar(r); await abrirReunion(r.id); $('#fTitulo').focus(); };
+
+/* ---------- Guardado automático ---------- */
+let tGuardar;
+function marcarCambio(){ if (!ACTUAL) return; ACTUAL.actualizado = Date.now(); $('#estado').textContent = 'Guardando…';
+  clearTimeout(tGuardar); tGuardar = setTimeout(async () => { try { await dbGuardar(ACTUAL); $('#estado').textContent = 'Guardado ✓'; } catch(e){ $('#estado').textContent = '⚠️ No se pudo guardar'; } }, 500); }
+const CAMPOS = {fTitulo:'titulo', fFecha:'fecha', fLugar:'lugar', fOrden:'orden', fNotas:'notas', fAcuerdos:'acuerdos'};
+Object.entries(CAMPOS).forEach(([id, k]) => $('#' + id).addEventListener('input', e => { ACTUAL[k] = e.target.value;
+  if (k === 'titulo') $('#tit').textContent = e.target.value || 'Nueva reunión'; marcarCambio(); }));
+$('#fTipo').addEventListener('change', e => { const prev = TIPOS[ACTUAL.tipo]?.orden || ''; ACTUAL.tipo = e.target.value;
+  if (!ACTUAL.orden.trim() || ACTUAL.orden === prev){ ACTUAL.orden = TIPOS[ACTUAL.tipo].orden; $('#fOrden').value = ACTUAL.orden; } marcarCambio(); });
+$('#fAviso').addEventListener('change', e => { ACTUAL.aviso = e.target.checked; marcarCambio(); });
+window.addEventListener('beforeunload', e => { if (ACTUAL) dbGuardar(ACTUAL); if (grabando()){ e.preventDefault(); e.returnValue = ''; } });
+document.addEventListener('visibilitychange', () => { if (document.hidden && ACTUAL) dbGuardar(ACTUAL); });
+
+/* ---------- Asistentes ---------- */
+function pintarChips(){ $('#chips').innerHTML = ACTUAL.asistentes.map((a,i) => `<span>${esc(a)}<button data-i="${i}" aria-label="Quitar">×</button></span>`).join(''); }
+function addAsistentes(txt){ txt.split(/[,;\n]/).map(s => s.trim()).filter(Boolean).forEach(a => { if (!ACTUAL.asistentes.includes(a)) ACTUAL.asistentes.push(a); });
+  pintarChips(); marcarCambio(); }
+$('#fAsis').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ','){ e.preventDefault(); addAsistentes(e.target.value); e.target.value = ''; } });
+$('#fAsis').addEventListener('blur', e => { if (e.target.value.trim()){ addAsistentes(e.target.value); e.target.value = ''; } });
+$('#chips').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; ACTUAL.asistentes.splice(+b.dataset.i, 1); pintarChips(); marcarCambio(); });
+
+/* ---------- Tareas ---------- */
+function pintarTareas(){ const ts = ACTUAL.tareas;
+  $('#tareas').innerHTML = ts.length ? ts.map(t => `<div class="tarea ${t.hecha?'hecha':''}">
+    <input type="checkbox" data-t="${t.id}" ${t.hecha?'checked':''} aria-label="Hecha">
+    <div class="txt">${esc(t.texto)}<div class="meta">${t.resp?'👤 '+esc(t.resp):''}${t.resp&&t.fecha?' · ':''}${t.fecha?'📅 '+esc(fechaCorta(t.fecha)):''}</div></div>
+    <button class="btn ghost mini" data-del="${t.id}" aria-label="Borrar tarea">✕</button></div>`).join('') : '<div class="meta">Sin tareas todavía.</div>'; }
+$('#bAddTarea').onclick = () => { const txt = $('#tTexto').value.trim(); if (!txt){ $('#tTexto').focus(); return; }
+  ACTUAL.tareas.push({id:uid(), texto:txt, resp:$('#tResp').value.trim(), fecha:$('#tFecha').value, hecha:false});
+  $('#tTexto').value = ''; $('#tResp').value = ''; $('#tFecha').value = ''; pintarTareas(); marcarCambio(); $('#tTexto').focus(); };
+$('#tTexto').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#bAddTarea').click(); } });
+$('#tareas').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (!d) return; ACTUAL.tareas = ACTUAL.tareas.filter(t => t.id !== d.dataset.del); pintarTareas(); marcarCambio(); });
+$('#tareas').addEventListener('change', e => { const c = e.target.closest('[data-t]'); if (!c) return; const t = ACTUAL.tareas.find(x => x.id === c.dataset.t); t.hecha = c.checked; pintarTareas(); marcarCambio(); });
+
+/* ---------- Dictado por voz (descansa las manos) ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recCampo = null, recBtn = null;
+if (!SR) document.querySelectorAll('.dictar').forEach(b => b.classList.add('oculto'));
+function pararDictado(){ if (rec){ try { rec.stop(); } catch(e){} } }
+document.querySelectorAll('.dictar').forEach(b => b.addEventListener('click', () => {
+  if (rec && recBtn === b){ pararDictado(); return; }
+  pararDictado();
+  const campo = $('#' + b.dataset.dictar);
+  rec = new SR(); rec.lang = 'es-ES'; rec.continuous = true; rec.interimResults = false; recCampo = campo; recBtn = b;
+  rec.onresult = ev => { for (let i = ev.resultIndex; i < ev.results.length; i++){ if (ev.results[i].isFinal){
+      let t = ev.results[i][0].transcript.trim(); if (!t) continue;
+      t = t.replace(/\s*(punto y aparte|nueva línea|nuevo párrafo)\s*/gi, '.\n').replace(/\s*punto\b/gi, '.').replace(/\s*coma\b/gi, ',');
+      const v = campo.value; const sep = !v || /\n$/.test(v) ? '' : ' ';
+      campo.value = v + sep + t.charAt(0).toUpperCase() + t.slice(1); campo.dispatchEvent(new Event('input')); } } };
+  rec.onend = () => { b.classList.remove('on'); b.textContent = '🎤 Dictar'; rec = null; recBtn = null; };
+  rec.onerror = ev => { if (ev.error === 'not-allowed') toast('Permite el micrófono para dictar'); };
+  try { rec.start(); b.classList.add('on'); b.textContent = '⏹ Parar'; toast('Habla con normalidad. Di «punto y aparte» para cambiar de línea.'); } catch(e){ toast('No se pudo iniciar el dictado'); }
+}));
+
+/* ---------- Grabación de audio ---------- */
+let mr = null, trozos = [], t0 = 0, acumulado = 0, tick = null, stream = null, wake = null;
+const grabando = () => !!mr && mr.state !== 'inactive';
+function segundos(){ return acumulado + (mr && mr.state === 'recording' ? (Date.now() - t0)/1000 : 0); }
+function mimeAudio(){ for (const m of ['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg;codecs=opus']) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
+function botonesGrab(estado){ const on = estado !== 'parado';
+  $('#bGrabar').classList.toggle('oculto', on); ['#bPausa','#bMarca','#bParar'].forEach(s => $(s).classList.toggle('oculto', !on));
+  $('#bPausa').textContent = estado === 'pausa' ? '▶ Seguir' : '⏸ Pausa'; $('#grab').classList.toggle('on', on);
+  $('#reloj').innerHTML = (estado === 'grabando' ? '<span class="punto"></span>' : '') + mmss(segundos()); }
+$('#bGrabar').onclick = async () => {
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){ toast('Este navegador no permite grabar. Prueba con Chrome.'); return; }
+  if (!ACTUAL.aviso){ const ok = await confirmar('¿Has avisado de la grabación?', 'Antes de grabar conviene informar a las personas asistentes (protección de datos). Puedes marcar la casilla y seguir.');
+    if (!ok) return; ACTUAL.aviso = true; $('#fAviso').checked = true; marcarCambio(); }
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); }
+  catch(e){ toast('Sin permiso de micrófono. Revísalo en los ajustes del navegador.'); return; }
+  const mime = mimeAudio(); mr = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined); trozos = []; acumulado = 0;
+  mr.ondataavailable = e => { if (e.data.size) trozos.push(e.data); };
+  mr.onstop = guardarGrabacion;
+  mr.start(5000); t0 = Date.now(); botonesGrab('grabando');
+  tick = setInterval(() => botonesGrab(mr.state === 'paused' ? 'pausa' : 'grabando'), 500);
+  try { wake = await navigator.wakeLock?.request('screen'); } catch(e){}
+};
+$('#bPausa').onclick = () => { if (mr.state === 'recording'){ acumulado += (Date.now() - t0)/1000; mr.pause(); botonesGrab('pausa'); }
+  else { t0 = Date.now(); mr.resume(); botonesGrab('grabando'); } };
+$('#bMarca').onclick = () => { const n = $('#fNotas'); const m = `[⏱ ${mmss(segundos())}] `;
+  n.value = n.value + (n.value && !n.value.endsWith('\n') ? '\n' : '') + m; n.dispatchEvent(new Event('input'));
+  n.focus(); n.setSelectionRange(n.value.length, n.value.length); toast('Marca añadida a las notas'); };
+$('#bParar').onclick = () => { if (mr.state === 'recording') acumulado += (Date.now() - t0)/1000; mr.stop(); };
+async function guardarGrabacion(){
+  clearInterval(tick); stream.getTracks().forEach(t => t.stop()); try { wake && wake.release(); } catch(e){}
+  const tipo = (mr.mimeType || 'audio/webm').split(';')[0]; const blob = new Blob(trozos, {type:tipo});
+  const n = ACTUAL.audios.length + 1;
+  await anadirAudio(blob, `Grabación ${n}`, acumulado); mr = null; acumulado = 0; botonesGrab('parado'); $('#reloj').textContent = '00:00';
+  toast('Audio guardado ✓');
+}
+async function anadirAudio(blob, nombre, dur){
+  const id = uid(); await dbGuardarAudio({id, blob});
+  ACTUAL.audios.push({id, nombre, dur:Math.round(dur||0), mime:blob.type, creado:Date.now()}); await dbGuardar(ACTUAL); pintarAudios();
+}
+$('#fImportAudio').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return;
+  await anadirAudio(f, f.name.replace(/\.[^.]+$/, ''), 0); e.target.value = ''; toast('Audio añadido ✓'); });
+
+const urls = {};
+async function pintarAudios(){
+  Object.values(urls).forEach(u => URL.revokeObjectURL(u));
+  const cont = $('#audios'); if (!ACTUAL.audios.length){ cont.innerHTML = ''; return; }
+  cont.innerHTML = ACTUAL.audios.map(a => `<div class="audio" data-a="${a.id}">
+    <div class="secc"><b>${esc(a.nombre)}</b><span class="meta">${a.dur ? mmss(a.dur) : ''}</span></div>
+    <audio controls preload="metadata"></audio>
+    <div class="fila"><button class="btn mini" data-acc="comp">📤 Compartir</button><button class="btn mini ghost" data-acc="ren">✏️ Renombrar</button><button class="btn mini peligro" data-acc="del">🗑️</button></div></div>`).join('');
+  for (const a of ACTUAL.audios){ const reg = await dbAudio(a.id); if (reg){ urls[a.id] = URL.createObjectURL(reg.blob); cont.querySelector(`[data-a="${a.id}"] audio`).src = urls[a.id]; } }
+}
+function extDe(mime){ return /mp4|m4a|aac/.test(mime) ? 'm4a' : /ogg/.test(mime) ? 'ogg' : /mpeg|mp3/.test(mime) ? 'mp3' : /wav/.test(mime) ? 'wav' : 'webm'; }
+async function archivoAudio(a){ const reg = await dbAudio(a.id); if (!reg) return null; const mime = reg.blob.type || a.mime || 'audio/webm';
+  const base = nombreArchivo(ACTUAL, 'x').replace(/\.x$/, '') + '_' + a.nombre.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w\-]+/g,'_');
+  return new File([reg.blob], base + '.' + extDe(mime), {type:mime}); }
+$('#audios').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-acc]'); if (!b) return; const id = b.closest('[data-a]').dataset.a; const a = ACTUAL.audios.find(x => x.id === id);
+  if (b.dataset.acc === 'comp'){ const f = await archivoAudio(a); if (f) compartirArchivos([f], a.nombre); }
+  if (b.dataset.acc === 'ren'){ const sp = b.closest('[data-a]').querySelector('b'); const inp = document.createElement('input'); inp.value = a.nombre; sp.replaceWith(inp); inp.focus(); inp.select();
+    const fin = () => { a.nombre = inp.value.trim() || a.nombre; marcarCambio(); pintarAudios(); };
+    inp.addEventListener('blur', fin); inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') inp.blur(); }); }
+  if (b.dataset.acc === 'del'){ if (await confirmar('¿Eliminar este audio?', a.nombre + ' se borrará de este dispositivo.')){
+    await dbBorrarAudio(id); ACTUAL.audios = ACTUAL.audios.filter(x => x.id !== id); await dbGuardar(ACTUAL); pintarAudios(); } }
+});
+
+/* ---------- Borrar reunión ---------- */
+$('#bBorrar').onclick = async () => { if (!await confirmar('¿Eliminar la reunión?', 'Se borrarán sus notas, tareas y audios de este dispositivo.')) return;
+  for (const a of ACTUAL.audios) await dbBorrarAudio(a.id); await dbBorrar(ACTUAL.id); REUNIONES = REUNIONES.filter(r => r.id !== ACTUAL.id); irLista(); toast('Reunión eliminada'); };
+
+/* ---------- Textos de exportación ---------- */
+const lineas = t => (t||'').split('\n').map(s => s.trim()).filter(Boolean);
+function textoMarkdown(r){
+  const L = [`# ${r.titulo || 'Reunión'}`, '', `**Tipo:** ${TIPOS[r.tipo]?.n || ''}  `, `**Fecha:** ${fechaBonita(r.fecha)}  `];
+  if (r.lugar) L.push(`**Lugar:** ${r.lugar}  `); if (AJ.centro) L.push(`**Centro:** ${AJ.centro}  `); if (AJ.nombre) L.push(`**Levanta acta:** ${AJ.nombre}  `);
+  if (r.asistentes.length) L.push('', '## Asistentes', ...r.asistentes.map(a => `- ${a}`));
+  if (r.orden.trim()) L.push('', '## Orden del día', ...lineas(r.orden));
+  if (r.notas.trim()) L.push('', '## Notas', r.notas.trim());
+  if (r.acuerdos.trim()) L.push('', '## Acuerdos', ...lineas(r.acuerdos).map(a => `- ${a.replace(/^[-•·]\s*/, '')}`));
+  if (r.tareas.length) L.push('', '## Tareas', ...r.tareas.map(t => `- [${t.hecha?'x':' '}] ${t.texto}${t.resp?' — '+t.resp:''}${t.fecha?' ('+fechaCorta(t.fecha)+')':''}`));
+  if (r.audios.length) L.push('', '## Audios', ...r.audios.map(a => `- ${a.nombre}${a.dur?' ('+mmss(a.dur)+')':''}`));
+  return L.join('\n');
+}
+function textoWhatsApp(r){
+  const L = [`*${r.titulo || 'Reunión'}*`, `📅 ${fechaBonita(r.fecha)}`];
+  if (r.lugar) L.push(`📍 ${r.lugar}`);
+  if (r.asistentes.length) L.push(`👥 ${r.asistentes.join(', ')}`);
+  if (r.acuerdos.trim()) L.push('', '*Acuerdos*', ...lineas(r.acuerdos).map(a => `• ${a.replace(/^[-•·]\s*/, '')}`));
+  const pend = r.tareas.filter(t => !t.hecha);
+  if (pend.length) L.push('', '*Tareas*', ...pend.map(t => `☐ ${t.texto}${t.resp?' — _'+t.resp+'_':''}${t.fecha?' ('+fechaCorta(t.fecha)+')':''}`));
+  if (!r.acuerdos.trim() && !pend.length && r.notas.trim()) L.push('', r.notas.trim().slice(0, 1500));
+  return L.join('\n');
+}
+
+/* ---------- PDF ---------- */
+const limpiaPDF = t => String(t).replace(/⏱\uFE0F?\s*/g,'').replace(/[^\x00-\xFF—–•…“”‘’€]/gu,'').replace(/ {2,}/g,' ');
+function crearPDF(r){
+  if (!window.jspdf){ toast('Falta cargar el generador de PDF. Abre la app una vez con internet.'); return null; }
+  const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4'}); const W = 210, M = 18, AN = W - 2*M; let y = 20;
+  const salto = h => { if (y + h > 280){ doc.addPage(); y = 20; } };
+  const txt = (t, tam=11, estilo='normal', color=[31,41,51]) => { doc.setFont('helvetica', estilo); doc.setFontSize(tam); doc.setTextColor(...color);
+    doc.splitTextToSize(limpiaPDF(t), AN).forEach(l => { salto(tam*0.5); doc.text(l, M, y); y += tam*0.45; }); };
+  const titulo = t => { y += 4; salto(12); doc.setFillColor(226,243,240); doc.rect(M, y-5, AN, 8, 'F'); txt(t, 12, 'bold', [20,137,122]); y += 2; };
+  if (AJ.centro) txt(AJ.centro.toUpperCase(), 9, 'bold', [95,107,118]);
+  txt('ACTA / NOTAS DE REUNIÓN', 9, 'normal', [95,107,118]); y += 2;
+  txt(r.titulo || 'Reunión', 17, 'bold'); y += 1;
+  doc.setDrawColor(20,137,122); doc.setLineWidth(.6); doc.line(M, y, W-M, y); y += 6;
+  [['Tipo', TIPOS[r.tipo]?.n], ['Fecha', fechaBonita(r.fecha)], ['Lugar', r.lugar], ['Levanta acta', AJ.nombre]].forEach(([k,v]) => { if (v) txt(k + ': ' + v, 10.5); });
+  if (r.asistentes.length){ titulo('Asistentes'); txt(r.asistentes.join(' · '), 10.5); }
+  if (r.orden.trim()){ titulo('Orden del día'); lineas(r.orden).forEach(l => txt(l, 10.5)); }
+  if (r.notas.trim()){ titulo('Desarrollo / Notas'); r.notas.trim().split('\n').forEach(l => l.trim() ? txt(l, 10.5) : (y += 2)); }
+  if (r.acuerdos.trim()){ titulo('Acuerdos'); lineas(r.acuerdos).forEach((a,i) => txt((i+1) + '. ' + a.replace(/^[-•·]\s*/, ''), 10.5)); }
+  if (r.tareas.length){ titulo('Tareas y seguimiento'); r.tareas.forEach(t => txt(`${t.hecha?'[x]':'[  ]'} ${t.texto}${t.resp?' — '+t.resp:''}${t.fecha?' (antes del '+fechaCorta(t.fecha)+')':''}`, 10.5)); }
+  if (r.audios.length){ titulo('Grabaciones'); r.audios.forEach(a => txt(`• ${a.nombre}${a.dur?' ('+mmss(a.dur)+')':''}`, 10)); }
+  if (r.aviso) { y += 4; txt('Se informó a las personas asistentes de la grabación de la reunión.', 9, 'italic', [95,107,118]); }
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(140);
+    doc.text(`${r.titulo || 'Reunión'} · ${(r.fecha||'').slice(0,10)}`, M, 290); doc.text(`Página ${i} de ${n}`, W-M, 290, {align:'right'}); }
+  return new File([doc.output('blob')], nombreArchivo(r, 'pdf'), {type:'application/pdf'});
+}
+
+/* ---------- Compartir ---------- */
+function descargar(f){ const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+async function compartirArchivos(files, titulo){
+  if (navigator.canShare && navigator.canShare({files})){ try { await navigator.share({files, title:titulo}); return; } catch(e){ if (e.name === 'AbortError') return; } }
+  files.forEach((f,i) => setTimeout(() => descargar(f), i*400)); toast(files.length > 1 ? 'Archivos descargados' : 'Archivo descargado');
+}
+async function copiar(t){ try { await navigator.clipboard.writeText(t); return true; } catch(e){
+  const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch(_){} ta.remove(); return ok; } }
+$('#bCompartir').onclick = async () => { if (ACTUAL) await dbGuardar(ACTUAL); abrir('#mCompartir'); };
+$('#mCompartir').addEventListener('click', async e => {
+  const b = e.target.closest('[data-acc]'); if (!b) return; const r = ACTUAL; cerrar('#mCompartir');
+  if (b.dataset.acc === 'pdf'){ const f = crearPDF(r); if (f) compartirArchivos([f], r.titulo); }
+  if (b.dataset.acc === 'wa'){ const t = textoWhatsApp(r);
+    if (navigator.share){ try { await navigator.share({text:t}); return; } catch(e){ if (e.name === 'AbortError') return; } }
+    if (await copiar(t)) toast('Copiado. Pégalo en WhatsApp ✓'); window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); }
+  if (b.dataset.acc === 'notion'){ if (await copiar(textoMarkdown(r))) toast('Copiado ✓ Pégalo en una página de Notion'); else toast('No se pudo copiar'); }
+  if (b.dataset.acc === 'md'){ compartirArchivos([new File([textoMarkdown(r)], nombreArchivo(r, 'md'), {type:'text/markdown'})], r.titulo); }
+  if (b.dataset.acc === 'todo'){ const fs = []; const p = crearPDF(r); if (p) fs.push(p); for (const a of r.audios){ const f = await archivoAudio(a); if (f) fs.push(f); }
+    if (fs.length) compartirArchivos(fs, r.titulo); }
+});
+
+/* ---------- Ajustes y copia de seguridad ---------- */
+$('#bAjustes').onclick = async () => { $('#aNombre').value = AJ.nombre; $('#aCentro').value = AJ.centro; $('#aGrande').checked = !!AJ.grande;
+  try { const e = await navigator.storage?.estimate(); if (e) $('#infoAlmac').textContent = `Espacio usado en este dispositivo: ${(e.usage/1048576).toFixed(1)} MB. Los datos se guardan solo aquí: haz copias de seguridad de vez en cuando.`; } catch(_){}
+  try { await navigator.storage?.persist(); } catch(_){} abrir('#mAjustes'); };
+$('#aNombre').oninput = e => { AJ.nombre = e.target.value; guardarAjustes(); };
+$('#aCentro').oninput = e => { AJ.centro = e.target.value; guardarAjustes(); };
+$('#aGrande').onchange = e => { AJ.grande = e.target.checked; guardarAjustes(); };
+const aB64 = b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+$('#bBackup').onclick = async () => { toast('Preparando copia…'); const reuniones = await dbTodas(); const audios = [];
+  for (const r of reuniones) for (const a of r.audios||[]){ const reg = await dbAudio(a.id); if (reg) audios.push({id:a.id, data:await aB64(reg.blob)}); }
+  const f = new File([JSON.stringify({app:'notas-reunion', v:1, fecha:new Date().toISOString(), ajustes:AJ, reuniones, audios})],
+    `copia_reuniones_${new Date().toISOString().slice(0,10)}.json`, {type:'application/json'});
+  compartirArchivos([f], 'Copia de seguridad de reuniones'); };
+$('#fRestaurar').addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (d.app !== 'notas-reunion') throw 0;
+    for (const a of d.audios||[]){ const blob = await (await fetch(a.data)).blob(); await dbGuardarAudio({id:a.id, blob}); }
+    for (const r of d.reuniones||[]) await dbGuardar(r);
+    if (!AJ.nombre && d.ajustes){ AJ = Object.assign(AJ, d.ajustes); guardarAjustes(); }
+    REUNIONES = await dbTodas(); cerrar('#mAjustes'); pintarLista(); toast(`Restauradas ${d.reuniones.length} reuniones ✓`);
+  } catch(err){ toast('Ese archivo no es una copia válida'); } e.target.value = ''; });
+
+/* ---------- Arranque ---------- */
+(async () => {
+  pintarFiltro();
+  try { await abrirDB(); REUNIONES = await dbTodas(); } catch(e){ toast('No se puede guardar en este navegador (¿modo incógnito?)'); }
+  pintarLista();
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
