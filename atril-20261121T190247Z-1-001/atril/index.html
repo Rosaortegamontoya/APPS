@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#141726" />
+<title>Atril · Entrenador de comunicación oral docente</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   ATRIL · sistema de diseño
+   Concepto: "sala de ensayo bajo un foco". Fondo tinta profunda,
+   acento latón/foco (ámbar) usado con contención, señal fría azul
+   para datos. La firma visual es el medidor de voz reactivo.
+   ============================================================ */
+:root{
+  --ink:#141726; --ink-2:#1b1f31; --surface:#20263b; --surface-2:#272e47;
+  --line:#323a56; --line-soft:#2a3149;
+  --text:#eaecf4; --text-dim:#a6adc8; --text-mute:#727a99;
+  --brass:#e8b84b; --brass-soft:#f0cd7a; --brass-ink:#3a2f12;
+  --signal:#6f9bff; --signal-soft:#9bb8ff;
+  --ok:#4cc38a; --warn:#e8925b; --bad:#e86b6b;
+  --radius:16px; --radius-sm:10px; --radius-lg:24px;
+  --shadow:0 8px 30px rgba(0,0,0,.35); --shadow-soft:0 2px 12px rgba(0,0,0,.25);
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --sidebar-w:250px;
+}
+:root[data-theme="light"]{
+  --ink:#eef0f5; --ink-2:#e6e9f1; --surface:#ffffff; --surface-2:#f4f6fb;
+  --line:#d9deea; --line-soft:#e6eaf3;
+  --text:#1a1f30; --text-dim:#4d5570; --text-mute:#8189a3;
+  --brass:#c8901d; --brass-soft:#e0ad3f; --brass-ink:#fff4d8;
+  --signal:#3c62d6; --signal-soft:#6f90ec;
+  --shadow:0 8px 30px rgba(30,40,80,.12); --shadow-soft:0 2px 12px rgba(30,40,80,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-body); background:var(--ink); color:var(--text);
+  -webkit-font-smoothing:antialiased; line-height:1.5; overflow:hidden;
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;line-height:1.15;letter-spacing:-.01em}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+::selection{background:var(--brass);color:var(--brass-ink)}
+
+/* ---------- Estructura general ---------- */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;height:100dvh}
+.sidebar{
+  background:var(--ink-2);border-right:1px solid var(--line-soft);
+  display:flex;flex-direction:column;padding:20px 14px;gap:6px;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+.brand .glyph{width:38px;height:38px;flex:0 0 auto}
+.brand .name{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.02em}
+.brand .name small{display:block;font-family:var(--font-body);font-weight:500;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-mute)}
+.nav-label{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-mute);padding:14px 10px 6px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);
+  color:var(--text-dim);font-weight:500;font-size:14.5px;transition:background .15s,color .15s;width:100%;text-align:left;
+}
+.nav-item svg{width:19px;height:19px;flex:0 0 auto;opacity:.85}
+.nav-item:hover{background:var(--surface);color:var(--text)}
+.nav-item.active{background:var(--surface);color:var(--text);box-shadow:inset 3px 0 0 var(--brass)}
+.nav-item.active svg{color:var(--brass);opacity:1}
+.sidebar-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line-soft)}
+.profile-chip{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);background:var(--surface);width:100%;text-align:left}
+.profile-chip:hover{background:var(--surface-2)}
+.avatar{width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--brass-ink);background:linear-gradient(135deg,var(--brass),var(--brass-soft))}
+.profile-chip .meta{overflow:hidden}
+.profile-chip .meta b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-chip .meta span{font-size:11px;color:var(--text-mute)}
+
+.main{overflow-y:auto;position:relative}
+.view{display:none;padding:34px 40px 80px;max-width:1120px;margin:0 auto;animation:fade .3s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.view-head{margin-bottom:26px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);font-weight:600;margin-bottom:8px}
+.view-head h1{font-size:32px;margin-bottom:6px}
+.view-head p{color:var(--text-dim);max-width:60ch}
+
+/* ---------- Componentes ---------- */
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px}
+.card+.card{margin-top:16px}
+.grid{display:grid;gap:16px}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  padding:11px 18px;border-radius:11px;font-weight:600;font-size:14px;
+  background:var(--surface-2);color:var(--text);border:1px solid var(--line);transition:.15s;
+}
+.btn:hover{border-color:var(--text-mute)}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:linear-gradient(135deg,var(--brass),var(--brass-soft));color:var(--brass-ink);border:none}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:none;border:1px solid var(--line)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.big{padding:15px 26px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--text-dim)}
+.field .hint{font-size:12px;color:var(--text-mute);margin-top:6px}
+input[type=text],input[type=password],input[type=number],select,textarea{
+  width:100%;padding:11px 13px;background:var(--ink);border:1px solid var(--line);
+  border-radius:var(--radius-sm);color:var(--text);font-size:14px;transition:border .15s;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brass)}
+textarea{resize:vertical;min-height:80px;font-family:var(--font-body)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--surface-2);border:1px solid var(--line);color:var(--text-dim)}
+.tag.on{background:var(--brass);color:var(--brass-ink);border-color:transparent}
+.pill{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--font-mono)}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat .n{font-family:var(--font-mono);font-size:30px;font-weight:500;letter-spacing:-.02em}
+.stat .l{font-size:12px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.08em}
+.muted{color:var(--text-mute)}
+.empty{text-align:center;padding:50px 20px;color:var(--text-mute)}
+.empty svg{width:48px;height:48px;opacity:.4;margin-bottom:14px}
+
+/* ---------- Firma: medidor de voz ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:22px;padding:20px 0}
+.orb-wrap{position:relative;width:200px;height:200px;display:grid;place-items:center}
+.orb{
+  width:150px;height:150px;border-radius:50%;position:relative;z-index:2;
+  background:radial-gradient(circle at 35% 30%,var(--brass-soft),var(--brass) 55%,#b98a1e 100%);
+  box-shadow:0 0 0 0 rgba(232,184,75,.4);transition:transform .08s ease-out;
+  display:grid;place-items:center;color:var(--brass-ink);
+}
+.orb.idle{background:radial-gradient(circle at 35% 30%,var(--surface-2),var(--surface) 60%,var(--ink-2));color:var(--text-mute);box-shadow:none}
+.orb.speaking{background:radial-gradient(circle at 35% 30%,var(--signal-soft),var(--signal) 55%,#3450b0);color:#fff}
+.orb svg{width:44px;height:44px}
+.orb-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--brass);opacity:0;z-index:1}
+.orb-ring.pulse{animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.5);opacity:0}}
+.vu{display:flex;gap:4px;align-items:flex-end;height:34px}
+.vu i{width:5px;background:var(--brass);border-radius:3px;height:6px;transition:height .09s}
+.session-status{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);text-align:center;min-height:20px}
+.transcript{background:var(--ink);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px;max-height:340px;overflow-y:auto}
+.turn{margin-bottom:16px;display:flex;gap:12px}
+.turn:last-child{margin-bottom:0}
+.turn .who{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--font-display)}
+.turn.user .who{background:var(--surface-2);color:var(--text-dim)}
+.turn.ai .who{background:linear-gradient(135deg,var(--brass),var(--brass-soft));color:var(--brass-ink)}
+.turn .bubble{flex:1;font-size:14.5px;line-height:1.55}
+.turn .bubble .cite{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--signal-soft);font-family:var(--font-mono)}
+.interim{color:var(--text-mute);font-style:italic}
+
+/* ---------- Biblioteca ---------- */
+.doc-row{display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid var(--line-soft);border-radius:var(--radius-sm);background:var(--surface);margin-bottom:9px;transition:.15s}
+.doc-row:hover{border-color:var(--line)}
+.doc-row .ic{width:38px;height:38px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;background:var(--surface-2);font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--brass)}
+.doc-row .info{flex:1;min-width:0}
+.doc-row .info b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-row .info span{font-size:12px;color:var(--text-mute)}
+.doc-row .rag-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.dropzone{border:2px dashed var(--line);border-radius:var(--radius);padding:34px;text-align:center;color:var(--text-mute);transition:.15s;cursor:pointer}
+.dropzone.over{border-color:var(--brass);background:var(--surface-2);color:var(--text-dim)}
+
+/* ---------- Modos ---------- */
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.mode-card{text-align:left;padding:16px;border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--surface);transition:.15s;position:relative}
+.mode-card:hover{border-color:var(--brass);transform:translateY(-2px)}
+.mode-card.sel{border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+.mode-card .mic{font-size:22px;margin-bottom:10px;display:block}
+.mode-card b{display:block;font-size:14.5px;font-family:var(--font-display);font-weight:600;margin-bottom:4px}
+.mode-card span{font-size:12px;color:var(--text-mute);line-height:1.4}
+
+/* ---------- Feedback ---------- */
+.gauge{display:flex;flex-direction:column;gap:8px}
+.gauge .bar{height:8px;background:var(--ink);border-radius:6px;overflow:hidden}
+.gauge .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--brass),var(--brass-soft))}
+.gauge .top{display:flex;justify-content:space-between;font-size:13px}
+.gauge .top b{font-family:var(--font-mono);font-weight:500}
+.fb-list{list-style:none}
+.fb-list li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:14px}
+.fb-list li:last-child{border:none}
+.fb-list .dot{width:7px;height:7px;border-radius:50%;margin-top:8px;flex:0 0 auto}
+
+/* ---------- Toast / modal ---------- */
+.toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 18px;font-size:13.5px;box-shadow:var(--shadow);animation:fade .2s}
+.toast.ok{border-color:var(--ok)} .toast.bad{border-color:var(--bad)}
+.modal-bg{position:fixed;inset:0;background:rgba(8,10,18,.7);z-index:200;display:none;place-items:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-bg.open{display:grid}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px;max-width:460px;width:100%;box-shadow:var(--shadow)}
+.modal h3{font-size:20px;margin-bottom:16px}
+.modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+
+.topbar{display:none}
+.ai-banner{display:none;align-items:center;gap:12px;padding:11px 16px 11px 20px;font-size:13.5px;border-bottom:1px solid var(--line-soft);background:var(--surface)}
+.ai-banner span{flex:1;line-height:1.45}
+.ai-banner .btn{padding:7px 13px;font-size:12.5px;white-space:nowrap}
+.ai-banner .x{color:var(--text-mute);font-size:15px;width:28px;height:28px;border-radius:7px;flex:0 0 auto}
+.ai-banner .x:hover{background:var(--surface-2)}
+.ai-banner.ok{border-color:var(--ok)} .ai-banner.ok span{color:var(--ok)}
+.ai-banner.warn{border-color:var(--warn)}
+.ai-banner.bad{border-color:var(--bad)}
+.ai-banner.info span{color:var(--text-dim)}
+.ai-banner code{background:var(--ink);padding:1px 6px;border-radius:5px;font-family:var(--font-mono);font-size:12px}
+.ai-banner b{color:var(--text)}
+/* ---------- Responsive ---------- */
+@media(max-width:860px){
+  :root{--sidebar-w:0}
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:150;transform:translateX(-100%);transition:transform .25s;box-shadow:var(--shadow)}
+  .sidebar.open{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:140;display:none}
+  .scrim.on{display:block}
+  .topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-soft);background:var(--ink-2);position:sticky;top:0;z-index:100}
+  .topbar b{font-family:var(--font-display);font-weight:700}
+  .view{padding:20px 16px 90px}
+  .view-head h1{font-size:25px}
+  .grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}
+  .orb-wrap{width:170px;height:170px}.orb{width:128px;height:128px}
+}
+.hamburger{width:40px;height:40px;border-radius:10px;background:var(--surface);display:grid;place-items:center}
+.hamburger svg{width:22px;height:22px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="glyph" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="var(--brass)"/>
+        <path d="M20 8v18M13 26h14l-3 6H16l-3-6Z" stroke="var(--brass-ink)" stroke-width="2.4" stroke-linejoin="round"/>
+        <circle cx="20" cy="8" r="3" fill="var(--brass-ink)"/>
+      </svg>
+      <div class="name">Atril<small>Comunicación oral</small></div>
+    </div>
+    <button class="nav-item active" data-view="inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5 12 4l9 6.5M5 9.5V20h14V9.5"/></svg> Inicio
+    </button>
+    <button class="nav-item" data-view="sesion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg> Entrenar
+    </button>
+    <button class="nav-item" data-view="biblioteca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5v15M8 4v16M12 5l6 15M20 19 14 5"/></svg> Biblioteca
+    </button>
+    <button class="nav-item" data-view="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg> Progreso
+    </button>
+    <button class="nav-item" data-view="ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg> Ajustes
+    </button>
+    <div class="sidebar-foot">
+      <button class="btn primary" id="installBtn" style="display:none;width:100%;margin-bottom:10px">📲 Instalar app</button>
+      <button class="profile-chip" data-view="perfiles">
+        <span class="avatar" id="sbAvatar">?</span>
+        <span class="meta"><b id="sbName">Sin perfil</b><span id="sbProvider">—</span></span>
+      </button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ======================= MAIN ======================= -->
+  <main class="main" id="main">
+    <div class="topbar">
+      <button class="hamburger" id="ham"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <b>Atril</b>
+    </div>
+    <div id="aiBanner" class="ai-banner"></div>
+
+    <!-- ---- INICIO ---- -->
+    <section class="view active" id="view-inicio">
+      <div class="view-head">
+        <div class="eyebrow">Sala de ensayo</div>
+        <h1 id="greet">Buenas</h1>
+        <p>Aquí ensayas antes de que cuente de verdad. Elige un modo, habla en voz alta y recibe un análisis de fondo y forma de tu discurso.</p>
+      </div>
+      <div class="grid cols-4" id="homeStats"></div>
+      <div class="card" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <h3>Empieza a entrenar</h3>
+          <button class="btn primary" data-view="sesion">Nueva sesión →</button>
+        </div>
+        <p class="muted" style="font-size:13.5px">Continúa donde lo dejaste o prueba un escenario nuevo. Cada sesión queda registrada en tu progreso.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:14px">Últimas sesiones</h3>
+        <div id="recentSessions"><div class="empty">Aún no has entrenado. Tu historial aparecerá aquí.</div></div>
+      </div>
+    </section>
+
+    <!-- ---- SESIÓN ---- -->
+    <section class="view" id="view-sesion">
+      <div id="sesionSetup">
+        <div class="view-head"><div class="eyebrow">Preparar</div><h1>Elige tu escenario</h1><p>Cada modo cambia el rol de tu interlocutor, el tono y el tipo de preguntas que recibirás.</p></div>
+        <div class="mode-grid" id="modeGrid"></div>
+        <div class="card" style="margin-top:18px">
+          <div class="grid cols-2">
+            <div class="field" style="margin:0">
+              <label>Nivel de exigencia</label>
+              <select id="difficulty"><option value="suave">Suave · ánimo y guía</option><option value="medio" selected>Medio · realista</option><option value="alto">Alto · tribunal duro</option></select>
+            </div>
+            <div class="field" style="margin:0">
+              <label>Tema o normativa (opcional)</label>
+              <input type="text" id="sessionTopic" placeholder="p. ej. DUA en 3º de Primaria, LOMLOE, CLM" />
+            </div>
+          </div>
+          <div class="field" style="margin-top:16px;margin-bottom:0">
+            <label>Documentos de apoyo (RAG)</label>
+            <div id="ragPicker" class="muted" style="font-size:13px">Cargando…</div>
+          </div>
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn primary big" id="startBtn">▶ Comenzar sesión de voz</button>
+            <button class="btn ghost big" id="startTextBtn">Escribir en vez de hablar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sesionLive" style="display:none">
+        <div class="stage">
+          <div class="orb-wrap">
+            <div class="orb-ring" id="orbRing"></div>
+            <div class="orb idle" id="orb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+            </div>
+          </div>
+          <div class="vu" id="vu"></div>
+          <div class="session-status" id="sessionStatus">Preparando…</div>
+        </div>
+        <div class="transcript" id="transcript"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center">
+          <div id="textInputWrap" style="display:none;flex:1;min-width:240px;gap:8px;display:flex">
+            <input type="text" id="textInput" placeholder="Escribe tu intervención…" style="flex:1"/>
+            <button class="btn primary" id="sendText">Enviar</button>
+          </div>
+          <button class="btn ghost" id="pauseBtn">⏸ Pausar escucha</button>
+          <button class="btn danger" id="endBtn">■ Terminar y analizar</button>
+        </div>
+      </div>
+
+      <div id="sesionReport" style="display:none"></div>
+    </section>
+
+    <!-- ---- BIBLIOTECA ---- -->
+    <section class="view" id="view-biblioteca">
+      <div class="view-head"><div class="eyebrow">Conocimiento</div><h1>Biblioteca documental</h1><p>Sube tus programaciones, normativa y apuntes. Atril extrae el texto y lo convierte en conocimiento consultable (RAG) para tus sesiones.</p></div>
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" multiple hidden accept=".pdf,.docx,.doc,.pptx,.md,.txt,.html,.htm,.csv,.xlsx,.xls,.png,.jpg,.jpeg" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:34px;height:34px;opacity:.5;margin-bottom:8px"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <div>Arrastra archivos aquí o <b style="color:var(--brass)">pulsa para elegir</b></div>
+        <div style="font-size:12px;margin-top:6px">PDF · Word · PowerPoint · Markdown · TXT · HTML · CSV · Excel · imágenes</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 12px">
+        <h3>Documentos <span class="muted" id="docCount"></span></h3>
+        <input type="text" id="docSearch" placeholder="Buscar…" style="width:200px"/>
+      </div>
+      <div id="docList"></div>
+    </section>
+
+    <!-- ---- PROGRESO ---- -->
+    <section class="view" id="view-stats">
+      <div class="view-head"><div class="eyebrow">Evolución</div><h1>Tu progreso</h1><p>Cómo cambia tu forma de hablar sesión a sesión. Fija objetivos y compara.</p></div>
+      <div class="grid cols-4" id="statCards"></div>
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:16px">Evolución de la puntuación global</h3>
+        <div id="chartScore"></div>
+      </div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card"><h3 style="margin-bottom:16px">Ritmo (palabras/min)</h3><div id="chartWpm"></div></div>
+        <div class="card"><h3 style="margin-bottom:16px">Muletillas por sesión</h3><div id="chartFillers"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+        <div><h3>Exportar</h3><p class="muted" style="font-size:13px">Descarga todo tu historial y evaluaciones en un archivo.</p></div>
+        <div style="display:flex;gap:10px"><button class="btn" id="exportJson">Datos (JSON)</button><button class="btn" id="exportReport">Informe (imprimir)</button></div>
+      </div>
+    </section>
+
+    <!-- ---- AJUSTES ---- -->
+    <section class="view" id="view-ajustes">
+      <div class="view-head"><div class="eyebrow">Configuración</div><h1>Ajustes</h1><p>Elige tu proveedor de IA y ajusta la voz. Todo se guarda solo en este dispositivo.</p></div>
+      <div class="card">
+        <h3 style="margin-bottom:16px">Proveedor de inteligencia artificial</h3>
+        <div class="field">
+          <label>Proveedor</label>
+          <select id="provider">
+            <option value="gemini">Google Gemini · clave gratuita recomendada</option>
+            <option value="openai">OpenAI</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="ollama">Ollama · local, sin coste</option>
+          </select>
+          <div class="hint" id="providerHint"></div>
+        </div>
+        <div class="field" id="keyField">
+          <label>Clave API</label>
+          <input type="password" id="apiKey" placeholder="Pega tu clave aquí" autocomplete="off"/>
+          <div class="hint">Se guarda cifrada en tu navegador y nunca se envía a nadie salvo al proveedor que elijas.</div>
+        </div>
+        <div class="grid cols-2">
+          <div class="field"><label>Modelo de chat</label><input type="text" id="chatModel"/></div>
+          <div class="field"><label>Modelo de embeddings (RAG)</label><input type="text" id="embModel"/></div>
+        </div>
+        <div class="field" id="ollamaUrlField" style="display:none"><label>URL de Ollama</label><input type="text" id="ollamaUrl" value="http://localhost:11434"/></div>
+        <button class="btn" id="testProvider">Probar conexión</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:16px">Voz</h3>
+        <div class="grid cols-2">
+          <div class="field"><label>Voz del interlocutor</label><select id="voiceSel"></select></div>
+          <div class="field"><label>Velocidad de habla</label><input type="number" id="voiceRate" min="0.5" max="1.6" step="0.05" value="1"/></div>
+        </div>
+        <label class="tag" style="cursor:pointer"><input type="checkbox" id="autoSpeak" checked style="width:auto"/> Leer en voz alta las respuestas</label>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px">Apariencia y datos</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="themeToggle">Cambiar a tema claro</button>
+          <button class="btn danger" id="wipeBtn">Borrar todos mis datos</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- PERFILES ---- -->
+    <section class="view" id="view-perfiles">
+      <div class="view-head"><div class="eyebrow">Quién entrena</div><h1>Perfiles</h1><p>Cada perfil guarda su propio historial, biblioteca, estadísticas y objetivos, por separado.</p></div>
+      <div id="profileList" class="grid cols-3"></div>
+      <button class="btn primary" id="newProfileBtn" style="margin-top:16px">+ Nuevo perfil</button>
+    </section>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+
+<!-- Librerías de extracción de texto (se cargan solo cuando hacen falta) -->
+<script>window.__LIBS__={pdf:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',pdfWorker:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',mammoth:'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',jszip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'};</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
