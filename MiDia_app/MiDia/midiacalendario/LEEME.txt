@@ -1,0 +1,12 @@
+MI DÍA – instalación (versión con calendario y plan con Gemini)
+
+1. Sube TODOS estos archivos juntos a una carpeta nueva de tu repositorio de GitHub Pages
+   (por ejemplo /midia-calendario/). Mejor no pisar la app que ya tienes hasta comprobar que va bien.
+2. Espera 1-2 minutos y abre la dirección https://TU-USUARIO.github.io/TU-REPO/midia-calendario/
+3. En el móvil: menú del navegador -> «Instalar app» / «Añadir a pantalla de inicio».
+4. Para traer tus datos: en la versión de Claude toca «Solo este dispositivo» -> «Copiar mis datos»;
+   en la app instalada toca ese mismo sitio -> pega -> «Traer mis datos».
+
+Fuera de Claude no se puede leer ni enviar a Google Calendar automáticamente:
+usa «Descargar calendario (.ics)» o el enlace «o abrir en Calendar» de cada tarea.
+El calendario propio y el plan con Gemini funcionan igual.
